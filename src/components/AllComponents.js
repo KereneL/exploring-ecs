@@ -1,6 +1,9 @@
-import { Mobile } from "./Mobile";
-import { Sprite } from "./Sprite";
-import { Team } from "./Team";
-import { Transform } from "./Transform";
+import { ActivityComp } from "./ActivityComp.js";
+import { MobileComp } from "./MobileComp.js";
+import { SpriteComp } from "./SpriteComp.js";
+import { TeamComp } from "./TeamComp.js";
+import { TransformComp } from "./TransformComp.js";
+import { HealthComp } from "./HealthComp.js";
+import { AttackComp } from "./AttackComp.js";
 
-export {Mobile,Sprite,Team,Transform}
+export { ActivityComp, MobileComp, SpriteComp, TeamComp, TransformComp, AttackComp, HealthComp }

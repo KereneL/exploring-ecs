@@ -1,29 +1,30 @@
 import { defineQuery, enterQuery, exitQuery } from 'bitecs';
-import { Sprite } from '../components/AllComponents.js'
+import { SpriteComp, TransformComp } from "../components/AllComponents.js";
 
-const hasSpriteQuery = defineQuery([Sprite]);
-const hasSpriteQueryEnter = enterQuery(hasSpriteQuery)
-const hasSpriteQueryExit = exitQuery(hasSpriteQuery)
+const hasSpriteQuery = defineQuery([SpriteComp, TransformComp]);
+const hasSpriteQueryEnter = enterQuery(hasSpriteQuery);
+const hasSpriteQueryExit = exitQuery(hasSpriteQuery);
 
-function RenderSystem(world, deltaTime) {
-
+function RenderSystem(world, deltaTime, sprites) {
   const entitiesEnter = hasSpriteQueryEnter(world);
-  const entitiesExist = hasSpriteQuery(world);
+  const entities = hasSpriteQuery(world);
   const entitiesExit = hasSpriteQueryExit(world);
 
-  entitiesEnter.forEach(entity => {    enterQuerySprite(entity)  });
-  entitiesExist.forEach(entity => {    existingQuerySprite(entity)  });
-  entitiesExit.forEach(entity => {    exitQuerySprite(entity)  });
+  // Handle entities that just entered the query
+  //entitiesEnter.forEach(entity => {  });
 
-  function enterQuerySprite(eid) {
-    return;
-  }
-  function existingQuerySprite(eid) {
-    return;
-  }
-  function exitQuerySprite(eid) {
-    return;
-  }
+  // Update existing sprites' positions
+  entities.forEach(entity => {
+    const sprite = sprites[SpriteComp.texture[entity]];
+    if (sprite) {
+      sprite.x = TransformComp.x[entity];
+      sprite.y = TransformComp.y[entity];
+      sprite.rotation = TransformComp.rotation[entity];
+    }
+  });
+
+  // Handle entities that exited the query
+  //entitiesExit.forEach(entity => {  });
 }
 
-export {RenderSystem}
+export { RenderSystem };

@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
-import { addEntity, createWorld, pipe, addComponent } from 'bitecs'
-import { Transform, Sprite, Mobile } from '../components/AllComponents.js'; // Import ECS components
-import { MovementSystem, RenderSystem } from '../systems/AllSystems.js'; // Import ECS systems
+import { ECSWorld } from "../ecs/ECSWorld.js";
+import { ActivityComp, TransformComp, SpriteComp, MobileComp } from "../components/AllComponents.js"; // Import ECS components
+import { queueActivity } from "../ecs/ActivityManager.js";
 
 export class Game extends Scene {
     constructor() {
@@ -12,38 +12,33 @@ export class Game extends Scene {
         this.cameras.main.setBackgroundColor(0x003300);
         const map = this.buildMap()
 
-        this.sprites = ["","","",""];
+        this.sprites = [];
 
         // Initialize your custom World instance
-        this.ecsWorld = createWorld();
-        this.player = addEntity(this.ecsWorld);
-        
-        // Optionally, initialize the components' values, e.g.:
-        addComponent(this.ecsWorld, Transform, this.player);
-        Transform.x[this.player] = 100;
-        Transform.y[this.player] = 200;
-        
-        addComponent(this.ecsWorld, Sprite, this.player);
-        const createdSprite = this.add.sprite(Transform.x[this.player], Transform.y[this.player], 'img-characterRed-3')
-        const spriteId =  this.sprites.push(createdSprite) -1;
-        console.log(spriteId)
-        Sprite.texture[this.player] = spriteId;
-        
-        addComponent(this.ecsWorld, Mobile, this.player);
-        Mobile.velocityX[this.player] = 1;
-        Mobile.velocityY[this.player] = 0;
-        Mobile.speed[this.player] = 0;
+        this.ecsWorld = new ECSWorld(this)
+        this.player = this.ecsWorld.createEntity()
 
-        this.ecsSystems = [
-            MovementSystem,
-            RenderSystem
-        ]
+        this.ecsWorld.attachComponent(this.player, TransformComp)
+        TransformComp.x[this.player] = 100;
+        TransformComp.y[this.player] = 100;
+        TransformComp.rotation[this.player] = Math.PI / 2;
+
+        this.ecsWorld.attachComponent(this.player, SpriteComp)
+        const createdSprite = this.add.sprite(0, 0, 'img-characterRed-3')
+        const spriteId = this.sprites.push(createdSprite) - 1;
+        SpriteComp.texture[this.player] = spriteId;
+
+        this.ecsWorld.attachComponent(this.player, MobileComp)
+        MobileComp.speed[this.player] = 0.25;
+
+        this.ecsWorld.attachComponent(this.player, ActivityComp); // Attach the ActivityComp
+
+
+        queueActivity(this.ecsWorld, this.player, 1);
     }
 
     update(time, deltaTime) {
-        for (let system of this.ecsSystems) {
-            system(this.ecsWorld, deltaTime);
-        }
+        this.ecsWorld.update(deltaTime)
     }
 
     buildMap() {
@@ -63,3 +58,13 @@ export class Game extends Scene {
     }
 
 }
+
+
+// For your game using bitECS and Phaser, you could follow this pattern by:
+
+//     Creating Order systems that issue high - level commands(like moving).
+//     Translating those orders into Activities that represent specific actions(like moving from one point to another).
+//     Each entity would have an activity queue, where it stores activities.
+//     Implement a tick system that processes the current activity and checks if the next queued activity should begin, based on whether the current one is finished or interruptible.
+
+// This approach allows you to handle complex sequences of actions and manage priorities between orders efficiently.

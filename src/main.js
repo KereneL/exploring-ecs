@@ -12,6 +12,7 @@ const config = {
     parent: 'game-container',
     backgroundColor: '#028af8',
     pixelArt: true,
+    title: "Exploring ECS",
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH

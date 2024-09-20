@@ -1,9 +1,14 @@
-import { addComponent, removeComponent } from 'bitecs';
+import { addEntity, addComponent } from 'bitecs';
 
-export class Entity {
+class Entity {
     constructor(world) {
-        this.world = world.getWorld();
-        this.components = {};
-        this.id = addEntity(this.world); // Create a new entity in the ECS world
+        this.world = world
+        this.eid = addEntity(this.world)
+    }
+
+    attachComponent(component) {
+        return addComponent(this.world, component, this.eid);
     }
 }
+
+export { Entity }
