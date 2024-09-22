@@ -1,7 +1,8 @@
 import { Scene } from 'phaser';
 import { ECSWorld } from "../ecs/ECSWorld.js";
-import { ActivityComp, TransformComp, SpriteComp, MobileComp } from "../components/AllComponents.js"; // Import ECS components
-import { queueActivity } from "../ecs/ActivityManager.js";
+import { ActivityComp, TransformComp, SpriteComp, MobileComp, MoveTargetComp } from "../components/AllComponents.js"; // Import ECS components
+import { issueMoveOrder, issueTurnOrder } from "../orders/AllOrders.js";
+import { queueActivity } from "../activities/ActivityManager.js";
 
 export class Game extends Scene {
     constructor() {
@@ -16,28 +17,64 @@ export class Game extends Scene {
 
         // Initialize your custom World instance
         this.ecsWorld = new ECSWorld(this)
+        this.cursor = this.ecsWorld.createEntity()
         this.player = this.ecsWorld.createEntity()
+        this.enemy = this.ecsWorld.createEntity()
 
+        this.ecsWorld.attachComponent(this.cursor, TransformComp)
+
+
+        // Init Player
         this.ecsWorld.attachComponent(this.player, TransformComp)
+        this.ecsWorld.attachComponent(this.player, SpriteComp)
+        this.ecsWorld.attachComponent(this.player, MobileComp)
+        this.ecsWorld.attachComponent(this.player, MoveTargetComp);
+        this.ecsWorld.attachComponent(this.player, ActivityComp);
         TransformComp.x[this.player] = 100;
         TransformComp.y[this.player] = 100;
         TransformComp.rotation[this.player] = Math.PI / 2;
-
-        this.ecsWorld.attachComponent(this.player, SpriteComp)
-        const createdSprite = this.add.sprite(0, 0, 'img-characterRed-3')
-        const spriteId = this.sprites.push(createdSprite) - 1;
+        let createdSprite = this.add.sprite(0, 0, 'img-characterBlue-3')
+        let spriteId = this.sprites.push(createdSprite) - 1;
         SpriteComp.texture[this.player] = spriteId;
-
-        this.ecsWorld.attachComponent(this.player, MobileComp)
         MobileComp.speed[this.player] = 0.25;
+        MobileComp.turnSpeed[this.player] = 0.025;
+        MoveTargetComp.x[this.player] = TransformComp.x[this.player]
+        MoveTargetComp.y[this.player] = TransformComp.y[this.player]
+        // Init Enemy
+        // this.ecsWorld.attachComponent(this.enemy, TransformComp)
+        // this.ecsWorld.attachComponent(this.enemy, SpriteComp)
+        // this.ecsWorld.attachComponent(this.enemy, MobileComp)
+        // //this.ecsWorld.attachComponent(this.enemy, ActivityComp); 
+        // TransformComp.x[this.enemy] = 700;
+        // TransformComp.y[this.enemy] = 700;
+        // createdSprite = this.add.sprite(0, 0, 'img-characterRed-3')
+        // spriteId = this.sprites.push(createdSprite) - 1;
+        // SpriteComp.texture[this.enemy] = spriteId;
+        // MobileComp.speed[this.enemy] = 0.25;
 
-        this.ecsWorld.attachComponent(this.player, ActivityComp); // Attach the ActivityComp
+
+        this.input.on('pointerup', (pointer) => {
+            const target = {
+                x: Math.round(this.input.mousePointer.x),
+                y: Math.round(this.input.mousePointer.y)
+            };
+
+            if (pointer.leftButtonReleased()) {
+                console.log("Turn order issued to:", target);  // Debugging output
+                issueTurnOrder(this.ecsWorld.world, this.player, target);
+            } else if (pointer.rightButtonReleased()) {
+                console.log("Move order issued to:", target);  // Debugging output
+                issueMoveOrder(this.ecsWorld.world, this.player, target);
+            }
+        });
 
 
-        queueActivity(this.ecsWorld, this.player, 1);
     }
 
     update(time, deltaTime) {
+        TransformComp.x[this.cursor] = this.input.mousePointer.x
+        TransformComp.y[this.cursor] = this.input.mousePointer.y;
+
         this.ecsWorld.update(deltaTime)
     }
 

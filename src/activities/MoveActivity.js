@@ -1,38 +1,30 @@
-import { TransformComp, MobileComp } from "../components/AllComponents.js";
+import { MobileComp, MoveTargetComp, TransformComp} from "../components/AllComponents";
 
-function MoveActivity(entity, targetPosition) {
-  let path = [{ x: 500, y: 500 }]
-
+function MoveActivity(entity) {
   return {
     tick: (entity, deltaTime) => {
-      console.log("MoveActivity Tick")
+      const targetX = MoveTargetComp.x[entity];
+      const targetY = MoveTargetComp.y[entity];
+      const speed = MobileComp.speed[entity];
 
-      // Path complete
-      if (!path || path.length === 0) {
-        return true;
-      }
-
-      // Get the next point in the path
-      const nextPoint = path[0];
-      const dx = nextPoint.x - TransformComp.x[entity];
-      const dy = nextPoint.y - TransformComp.y[entity];
+      const dx = targetX - TransformComp.x[entity];
+      const dy = targetY - TransformComp.y[entity];
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance < 1) {
-        // Remove the point from the path
-        path.shift();
-      } else {
-        const speed = MobileComp.speed[entity];
-        const vx = (dx / distance) * speed * deltaTime;
-        const vy = (dy / distance) * speed * deltaTime;
-        TransformComp.x[entity] += vx;
-        TransformComp.y[entity] += vy;
+      // Check if the movement is done
+      if (distance < speed * deltaTime) {
+        TransformComp.x[entity] = targetX;
+        TransformComp.y[entity] = targetY;
+        return true;  // Movement complete
       }
 
-      // Return true if path is empty
-      return path.length === 0;
+      // Calculate velocity and update position
+      TransformComp.x[entity] += (dx / distance) * speed * deltaTime;
+      TransformComp.y[entity] += (dy / distance) * speed * deltaTime;
+
+      return false;  // Still moving
     }
   };
 }
 
-export { MoveActivity }
+export {MoveActivity}

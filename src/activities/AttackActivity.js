@@ -1,35 +1,19 @@
-import { TransformComp, MobileComp, AttackComp } from "../components/AllComponents.js";
+import { AttackTargetComp } from '../components/AllComponents.js';
 
-function AttackActivity (entity, targetEntity) {
+function AttackActivity(entity) {
+  const targetEntity = AttackTargetComp.target[entity];  // Fetch target from the entity's components
+
   return {
     tick: (entity, deltaTime) => {
-      console.log("AttackActivity Tick")
-
-      const targetX = TransformComp.x[targetEntity];
-      const targetY = TransformComp.y[targetEntity];
-      const dx = targetX - TransformComp.x[entity];
-      const dy = targetY - TransformComp.y[entity];
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      // Check if in range
-      const range = AttackComp.range[entity];
-      if (distance > range) {
-        return false; // Move closer or wait
+      if (targetEntity && targetEntity.health > 0) {
+        // Perform attack logic
+        console.log(`Entity ${entity} attacks target ${targetEntity}`);
+        return false;  // Still attacking
       }
 
-      // Check if facing the target
-      const angleToTarget = Math.atan2(dy, dx);
-      if (Math.abs(MobileComp.facing[entity] - angleToTarget) > 0.1) {
-        MobileComp.facing[entity] = angleToTarget; // Turn to face target
-        return false;
-      }
-
-      // Use weapon
-      //AttackComp.fire(entity, targetEntity);
-
-      return Attack.ammo[entity] <= 0; // Done if out of ammo
+      return true;  // Attack finished
     }
   };
 }
 
-export { AttackActivity }
+export { AttackActivity };

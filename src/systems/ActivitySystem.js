@@ -1,7 +1,6 @@
 import { defineQuery } from 'bitecs';
-import { ActivityCompState } from "../components/ActivityComp.js";
-import { ActivityComp } from "../components/AllComponents.js";
-import { getActivityById } from "../ecs/ActivityManager.js";
+import { ActivityComp, ActivityCompState } from '../components/ActivityComp.js';
+import { getActivityById } from '../activities/ActivityManager.js';
 
 // Define a query for entities with the Activity component
 const activityQuery = defineQuery([ActivityComp]);
@@ -13,33 +12,27 @@ function ActivitySystem(world, deltaTime) {
     const currentActivity = ActivityComp.current[entity];
     const currentState = ActivityComp.state[entity];
 
-    // If the entity is Idle and there's a queued activity, start the queued one
-    if (currentState === ActivityCompState.Idle && ActivityComp.next[entity] !== 0) {
-      const nextActivity = ActivityComp.next[entity];
-      ActivityComp.current[entity] = nextActivity;
-      ActivityComp.state[entity] = ActivityCompState.Active;
-      //ActivityComp.next[entity] = 0; // Clear the queue
-      return;
-    }
+    // If the current activity is active, run its tick function
+    if (currentState === ActivityCompState.Active) {
+      const activity = getActivityById(entity, currentActivity);
 
-    // Get the current activity's function by its ID and run its tick
-    const activity = getActivityById.call(entity, currentActivity)
+      // Execute the activity's tick method
+      const isDone = activity.tick(entity, deltaTime);
 
-    if (activity && activity.tick(entity, deltaTime)) {
-      ActivityComp.state[entity] = ActivityCompState.Done;
-    }
+      // If the activity is done, mark it as Done and check for the next activity
+      if (isDone) {
+        ActivityComp.state[entity] = ActivityCompState.Done;
 
-    // If the current activity is done, move to the next activity if there is one
-    if (ActivityComp.state[entity] === ActivityCompState.Done) {
-      const nextActivity = ActivityComp.next[entity];
-      if (nextActivity !== 0) {
-        ActivityComp.current[entity] = nextActivity;
-        ActivityComp.state[entity] = ActivityCompState.Active;
-        ActivityComp.next[entity] = 0; // Clear the queue
-      } else {
-        // No next activity, so set to Idle
-        ActivityComp.current[entity] = 0;
-        ActivityComp.state[entity] = ActivityCompState.Idle;
+        // Check if there is a queued activity to start next
+        const nextActivity = ActivityComp.next[entity];
+        if (nextActivity) {
+          ActivityComp.current[entity] = nextActivity;
+          ActivityComp.state[entity] = ActivityCompState.Active;
+          ActivityComp.next[entity] = 0;  // Clear the queue
+        } else {
+          // No more activities, entity goes idle
+          ActivityComp.state[entity] = ActivityCompState.Idle;
+        }
       }
     }
   });
@@ -47,4 +40,4 @@ function ActivitySystem(world, deltaTime) {
   return world;
 }
 
-export { ActivitySystem }
+export { ActivitySystem };

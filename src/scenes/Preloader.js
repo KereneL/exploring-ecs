@@ -31,6 +31,7 @@ export class Preloader extends Scene
     {
         this.load.setPath('');
         this.load.image('img-characterRed-3', '/characterRed-3.png')
+        this.load.image('img-characterBlue-3', '/characterBlue-3.png')
         this.load.image('img-equipment', '/sheet_equipment.png')
 
         this.load.setPath('sportsTilemap/');
@@ -45,6 +46,6 @@ export class Preloader extends Scene
         //  For example, you can define global animations here, so we can use them in other scenes.
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start('MainMenu');
+        this.scene.start('Game');
     }
 }
